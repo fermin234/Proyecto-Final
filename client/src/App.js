@@ -13,6 +13,7 @@ import Footer from './views/Home/Footer/Footer';
 import Carrito from './views/Cart/Carrito/Carrito';
 import DetailCart from './views/Cart/DetailCart/DetailCart';
 import Perfil from './views/Perfil/Perfil';
+import Envio from './views/Cart/Envio/Envio';
 // import Landing from './views/Landing/Landing';
 
 export default function App() {
