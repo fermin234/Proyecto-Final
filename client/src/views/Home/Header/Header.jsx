@@ -15,9 +15,9 @@ const Header = () => {
     setUser(JSON.parse(payloadUser))
 
   }
-  //convierto el payload a objeto
+  // //convierto el payload a objeto
   useEffect(() => {
-    
+
   }, [pathname, user]);
 
   const cerrarSesion = () => {
