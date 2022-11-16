@@ -10,9 +10,9 @@ const Header = () => {
   useEffect(() => { }, [pathname]);
 
   return (
-    <div className="text-xs flex mb-2 px-6 bg-gradient-to-t from-blue-200 to-sky-600 justify-between fixed w-screen z-10">
+    <div className="text-xs flex mb-2 px-6 bg-gradient-to-t from-blue-200 to-sky-600 justify-between sticky top-0 w-screen z-10">
 
-      <div className="w-2/5 cursor-pointer" onClick={() => navigate("/home")}>
+      <div className="w-2/5 cursor-pointer" onClick={() => navigate("/")}>
         <img src={logo} width={"100px"} alt="Logo" />
       </div>
       <div className="flex">
