@@ -5,5 +5,5 @@ const routersUser = require('./routersUser.js');
 
 router.use('/products', controllers);
 router.use('/user', routersUser);
-
+router.use('/review', routersUser);
 module.exports = router;
