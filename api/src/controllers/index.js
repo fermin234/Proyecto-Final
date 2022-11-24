@@ -28,7 +28,7 @@ async function getAllProducts(req, res) {
         name: e.name,
         image: e.image,
         screen: e.screen,
-        internal_storage: e.internal_storage,
+        internal_storage: parseInt(e.internal_storage),
         front_camera: e.font_camera,
         rear_camera: e.rear_camera,
         cpu: e.cpu,
