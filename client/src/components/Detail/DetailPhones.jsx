@@ -24,8 +24,8 @@ export default function Detail() {
 
   return (
     <div>
-      <div><button><Link to='/home'>Volver</Link></button></div>
-      {/* <h2>Detail</h2> */}
+      <div><button><Link to='/'>Volver</Link></button></div>
+     
       {phones.length > 0 ?
 
         <div >
@@ -49,7 +49,7 @@ export default function Detail() {
             <h4>Pantalla: {phones.map(e => e.screen)} </h4>
             <h3>Precio: {phones.map(e => e.price)}</h3>
           </div>
-          <div><button><Link to='/home'> Arreglar para añadir al carrito </Link></button></div>
+          
 
         </div> : (
           <div >
