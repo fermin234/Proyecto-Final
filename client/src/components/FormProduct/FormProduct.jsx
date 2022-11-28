@@ -1,18 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from "react-router-dom"
 import { useDispatch, useSelector } from 'react-redux';
-import { createCellPhone } from '../../redux/actions';
+import { createBrand, createCellPhone } from '../../redux/actions';
+import Swal from "sweetalert2"
 
 const FormProduct = () => {
-  const datosDePrueba = { name: 'Samsung s20', image: 'https://www.centropolismedellin.com/wp-content/uploads/2021/11/Hombre-cargando-celular.jpg', cpu: 'Snapdragon 800', ram: '4', screen: '5.5', price: '700', front_camera: '20 mp', rear_camera: '200', internal_storage: '512', battery: "2355", precio: "1500", oId: 1, brandId: 3, stock: 15 }
+  // const datosDePrueba = { files: '',  name: 'Samsung s20', cpu: 'Snapdragon 800', ram: '4', screen: '5.5', price: '700', front_camera: '20 mp', rear_camera: '200', internal_storage: '512', battery: "2355", precio: "1500", oId: 1, brandId: 3, stock: 15 }
 
-  const initialState = { name: '', image: '', cpu: '', ram: '', screen: '', price: '', front_camera: '', rear_camera: '', internal_storage: '', battery: '', oId: '', brandId: '', precio: '', stock: '' }
+  const initialState = { files: '', name: '', cpu: '', ram: '', screen: '', price: '', front_camera: '', rear_camera: '', internal_storage: '', battery: '', oId: '', brandId: '', precio: '', stock: '' }
 
   const [input, setInput] = useState(initialState)
+  const [images, setImages] = useState({ files: [] })
   const [errors, setErrors] = useState({})
+  const formProduct = useRef(null)
   const brands = useSelector(state => state.brands)
   const os = useSelector(state => state.os)
   const products = useSelector(state => state.allProducts)
+
+  useEffect(() => {
+
+  }, [images])
+
 
   const dispatch = useDispatch()
 
@@ -25,7 +33,6 @@ const FormProduct = () => {
     }
     if (field.name) {
       if (products.find(data => data.name.toLowerCase() === field.name.toLowerCase())) {
-        // setErrors({...errors, name: "Este celular ya existe"})
         errors.name = "Este celular ya existe"
       }
     }
@@ -35,9 +42,9 @@ const FormProduct = () => {
     if (!field.oId) {
       errors.oId = "Elija una opcion"
     }
-    if (!field.image) {
-      errors.image = "Ingrese una imagen en formato URL"
-    }
+    // if (!field.image) {
+    //   errors.image = "Ingrese una imagen en formato URL"
+    // }
     if (!field.price) {
       errors.price = "Establecer un precio para el producto"
     }
@@ -78,33 +85,67 @@ const FormProduct = () => {
 
     setErrors(validateFields({ ...input, [e.target.name]: e.target.value }))
 
+    if (e.target.files) {
+      const files = Array.prototype.slice.call(e.target.files)
+      setImages(files)
+    }
   }
 
   const sendForm = async (e) => {
     e.preventDefault()
-    const response = await dispatch(createCellPhone(input))
-    if (response.payload[1]) {
-      alert(`Se ha creado el producto ${input.name} correctamente`)
-      navigate(`/product/${response.payload[0].id}`)      
+    const form = formProduct.current;
+    const data = new FormData(form);
+    const response = await dispatch(createCellPhone(data))
+    if (response.payload) {
+      Swal.fire({
+        icon: "success",
+        title: "Producto creado",
+        text: `Se ha creado el producto ${input.name} correctamente`
+      })
+      navigate(`/product/${response.payload[0].id}`)
     } else {
-      alert("Error al crear el producto")
+      console.log("Error al crear el producto", response)
+      Swal.fire({
+        icon: "error",
+        title: "No se pudo crear el producto",
+        text: "Error general " + response
+      })
+    }
+  }
+
+  const newBrand = async () => {
+    const brand = await Swal.fire({
+      icon: "question",
+      title: "Crear nueva marca",
+      input: "text",
+      inputPlaceholder: "Nombre nueva marca",
+      customClass: { input: 'capitalize' },
+      showCancelButton: true,
+      confirmButtonText: "Crear marca",
+      cancelButtonText: "Cancelar"
+    })
+    if (brand.value) {
+      const name = { name: brand.value }
+      const response = await dispatch(createBrand(name))
+      Swal.fire(`Nueva marca ${brand.value} creada correctamente`, '', 'success')
+      setInput({...input, brandId: response.payload.id})
     }
   }
 
   return (
     <div className='flex justify-center py-6'>
-      <div className="w-8/12 bg-gray-300 shadow-md rounded px-8 pt-6 pb-8 mb-4">
+      <div className="w-full mx-6 border-2 border-blue-300 shadow-md shadow-blue-300 rounded px-8 pt-6 pb-8 mb-4">
         <div className='font-bold text-2xl pb-8'>
           <h3>Creacion de producto</h3>
         </div>
-        <form onSubmit={sendForm}>
+        <form onSubmit={sendForm} ref={formProduct}>
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="">
               Nombre celular
             </label>
             <input
               type="text"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="shadow appearance-none border rounded border-gray-500 w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               placeholder="Ingresa el nombre del celular"
               name='name'
               value={input.name}
@@ -119,16 +160,17 @@ const FormProduct = () => {
               Marca celular
             </label>
             <select
-              className="shadow border rounded w-full py-2 px-3 bg-white text-gray-400 leading-tight focus:outline-none focus:shadow-outline"
+              className="shadow border border-gray-500 rounded w-full py-2 px-3 bg-white text-gray-400 leading-tight focus:outline-none focus:shadow-outline"
               onChange={handleChanges}
               name="brandId"
               value={input.brandId}
               required
             >
-              <option defaultValue value={''} hidden>Selecciona una opcion </option>
+              <option defaultValue value={''} >Selecciona una opcion </option>
               {brands.map((brand, index) => {
                 return (<option key={index} value={brand.id} >{brand.name}</option>)
               })}
+              <option onClick={newBrand}>Crear nueva marca</option>
             </select>
             {errors.brandId && <span className='text-red-500'>{errors.brandId}</span>}
           </div>
@@ -137,7 +179,7 @@ const FormProduct = () => {
               Seleccione sistema operativo
             </label>
             <select
-              className="shadow border rounded w-full py-2 px-3  bg-white text-gray-400 leading-tight focus:outline-none focus:shadow-outline"
+              className="shadow border border-gray-500 rounded w-full py-2 px-3  bg-white text-gray-400 leading-tight focus:outline-none focus:shadow-outline"
               onChange={handleChanges}
               name="oId"
               value={input.oId}
@@ -152,26 +194,26 @@ const FormProduct = () => {
           </div>
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="image">
-              image
+              Imagen
             </label>
             <input
-              type="text"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              placeholder="Ingresa imagen url"
-              name='image'
-              value={input.image}
+              type="file"
+              className="shadow appearance-none border border-gray-500 rounded w-full text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white pl-1 py-2"
+              accept='image/*'
+              name='files'
+              value={images.files || input.files}
               onChange={handleChanges}
               required
             />
             {errors.image && <span className='text-red-500'>{errors.image}</span>}
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="image">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="price">
               Precio
             </label>
             <input
               type="text"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="shadow appearance-none border border-gray-500 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               placeholder="Ingresa precio producto"
               name='price'
               value={input.price}
@@ -187,7 +229,7 @@ const FormProduct = () => {
             </label>
             <input
               type="text"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="shadow appearance-none border border-gray-500 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               placeholder="Ingresa cpu celular"
               name='cpu'
               value={input.cpu}
@@ -202,7 +244,7 @@ const FormProduct = () => {
             </label>
             <input
               type="text"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="shadow appearance-none border border-gray-500 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               placeholder="Cantidad de RAM"
               name='ram'
               value={input.ram}
@@ -217,7 +259,7 @@ const FormProduct = () => {
             </label>
             <input
               type="text"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="shadow appearance-none border border-gray-500 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               placeholder="Ingresa tamaño pantalla"
               name='screen'
               value={input.screen}
@@ -232,7 +274,7 @@ const FormProduct = () => {
             </label>
             <input
               type="text"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="shadow appearance-none border border-gray-500 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               placeholder="Resolucion camara delantera"
               name='front_camera'
               value={input.front_camera}
@@ -247,7 +289,7 @@ const FormProduct = () => {
             </label>
             <input
               type="text"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="shadow appearance-none border border-gray-500 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               placeholder="Resolucion camara trasera"
               name='rear_camera'
               value={input.rear_camera}
@@ -262,7 +304,7 @@ const FormProduct = () => {
             </label>
             <input
               type="text"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="shadow appearance-none border border-gray-500 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               placeholder="Ingresa capacidad bateria"
               name='battery'
               value={input.battery}
@@ -277,7 +319,7 @@ const FormProduct = () => {
             </label>
             <input
               type="text"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="shadow appearance-none border border-gray-500 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               placeholder="Cantidad almacenamiento"
               name='internal_storage'
               value={input.internal_storage}
@@ -292,7 +334,7 @@ const FormProduct = () => {
             </label>
             <input
               type="text"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="shadow appearance-none border border-gray-500 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               placeholder="Unidades de inventario"
               name='stock'
               value={input.stock}
@@ -306,14 +348,14 @@ const FormProduct = () => {
             <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
               Crear producto
             </button>
-            <button type="button"
+            {/* <button type="button"
               className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
               onClick={() => setInput(datosDePrueba)} >
               Datos de prueba
-            </button>
+            </button> */}
             <button type='reset'
               className="bg-yellow-400 hover:bg-yellow-500 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-              onClick={() =>{
+              onClick={() => {
                 setInput(initialState)
                 setErrors({})
               }} >

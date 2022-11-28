@@ -1,7 +1,9 @@
-const axios = require('axios');
-const { Cellphone, Os, Brand } = require('../db.js');
-const { Op } = require('sequelize');
-const { usuariosPrueba, creatDatosPrueba } = require('./user.controllers.js');
+const axios = require("axios");
+const { Cellphone, Os, Brand } = require("../db.js");
+const { Op } = require("sequelize");
+const { usuariosPrueba, creatDatosPrueba } = require("./user.controllers.js");
+const fs = require("fs-extra");
+const { uploadImage } = require("../config/cloudinary.js");
 
 //Trae todos los productos de la api y los vuelca a la base de datos
 async function getAllProducts(req, res) {
@@ -10,9 +12,7 @@ async function getAllProducts(req, res) {
 
   try {
     const listCellphones = await Cellphone.findAll({
-      include: [
-        { model: Brand },
-        { model: Os }]
+      include: [{ model: Brand }, { model: Os }],
     });
 
     // si no hay cellulares en la base de datos se procede a crearlos
@@ -24,7 +24,7 @@ async function getAllProducts(req, res) {
       );
       let initialData = products.data?.map((e) => ({
         //No podemos dejar el Id del prodcuto porque entonces no deja crear un0 nuevo producto que se le envie por formulario
-        // id: e.id, 
+        // id: e.id,
         brand: e.brand,
         name: e.name,
         image: e.image,
@@ -43,7 +43,7 @@ async function getAllProducts(req, res) {
 
       initialData.map(
         (e) => !brandsCell.includes(e.brand) && brandsCell.push(e.brand)
-      );     
+      );
 
       initialData.map(
         (e) =>
@@ -76,19 +76,17 @@ async function getAllProducts(req, res) {
           ));
       });
 
-      const cellphonesCreated = await Cellphone.findAll({ 
-      include: [ 
-        { model: Brand }, 
-        { model: Os }]
-    });
-      await creatDatosPrueba()
+      const cellphonesCreated = await Cellphone.findAll({
+        include: [{ model: Brand }, { model: Os }],
+      });
+      await creatDatosPrueba();
       return res?.json(
         cellphonesCreated.length > 0
-          ? cellphonesCreated
-          : 'No se pudieron crear los telefonos'
+          ? cellphonesCreated.sort((a, b) => a.id - b.id)
+          : "No se pudieron crear los telefonos"
       );
     } else {
-      return res?.json(listCellphones);
+      return res?.json(listCellphones.sort((a, b) => a.id - b.id));
     }
   } catch (error) {
     return error;
@@ -99,7 +97,7 @@ const getListBrands = async (req, res) => {
   try {
     const listBrands = await Brand.findAll();
     return res.json(
-      listBrands.length > 0 ? listBrands : 'No hay marcas disponibles'
+      listBrands.length > 0 ? listBrands : "No hay marcas disponibles"
     );
   } catch (error) {
     return res.json(error);
@@ -109,7 +107,7 @@ const getListBrands = async (req, res) => {
 const getListOs = async (req, res) => {
   try {
     const listOs = await Os.findAll();
-    return res.json(listOs.length > 0 ? listOs : 'No hay marcas disponibles');
+    return res.json(listOs.length > 0 ? listOs : "No hay marcas disponibles");
   } catch (error) {
     return res.json(error);
   }
@@ -124,7 +122,7 @@ async function getProductById(id) {
 
     return product.length
       ? product
-      : 'El ID no esta relacionado a ningun producto';
+      : "El ID no esta relacionado a ningun producto";
   } catch (error) { }
 }
 
@@ -137,7 +135,7 @@ async function getProductByName(name) {
       },
     });
 
-    return product.length ? product : 'Product not found';
+    return product.length ? product : "Product not found";
   } catch (error) {
     return error;
   }
@@ -146,17 +144,38 @@ async function getProductByName(name) {
 //Crea un producto en la base de datos
 async function createProduct(req, res) {
   const { name } = req.body;
+  const { files } = req?.files;
 
   try {
+    const response = await uploadImage(files.tempFilePath)
+    await fs.unlink(files.tempFilePath)
     const createCell = await Cellphone.findOrCreate({
       where: { name },
-      defaults: { ...req.body },
+      defaults: { 
+        ...req.body, 
+        image: response.url, 
+        idImage: response.public_id 
+      }
     });
-    createCell
+    return createCell
       ? res.json(createCell)
-      : res.status(400).json({ error: 'No se pudo crear telefono' });
+      : res.status(400).json({ error: "No se pudo crear telefono" });    
   } catch (error) {
-    res.status(500).json(error);
+    console.log("Error controller create product", error)
+    return res.status(500).json(error);
+  }
+}
+
+const createBrand = async (req, res) => {
+  console.log(req.body);
+  try {
+    const newBrand = await Brand.findOrCreate({ where: { name: req.body.name } });
+    return newBrand 
+      ? res.json(newBrand)
+      : res.status(400).json("no se pudo crear la marca")
+  } catch (error) {
+    console.log("Error controller creando nueva marca", error);
+    return res.status(500).json(error)
   }
 }
 
@@ -164,30 +183,50 @@ async function createProduct(req, res) {
 async function getProductsWithDB() {
   try {
     let DBInfo = await Cellphone.findAll({
-      include: [
-        { model: Brand },
-        { model: Os }]
+      include: [{ model: Brand }, { model: Os }],
     });
     if (!DBInfo.length) {
-      return 'La base de datos se encuentra vacia.';
+      return "La base de datos se encuentra vacia.";
     }
     return DBInfo;
   } catch (error) {
     return error;
   }
 }
+async function updateStock(req, res) {
+  const products = req.body;
+  try {
+    products.map(async (e) => {
+      let cellphone = await Cellphone.findOne({
+        where: { id: e.id },
+      });
+      cellphone.stock = e.stock - e.cant;
+      await cellphone.save({ fields: ["stock"] });
+      await cellphone.reload();
+    });
 
-//Crear un usuario.
-// async function createUser(user) {
-//   try {
-//     console.log(user);
-//     await Users.create(user);
+    const listCellphones = await Cellphone.findAll();
+    res.json(listCellphones);
+  } catch (error) {
+    res.json(error.message);
+  }
+}
 
-//     return `${user.name} creado.`;
-//   } catch (error) {
-//     return error;
-//   }
-// } //Proceso llevado al controlador de usuarios
+const updateCell = async (req, res) => {
+  const { id } = req.body;
+  try {
+    const cellUpdated = await Cellphone.update(
+      { ...req.body },
+      { where: { id }}
+    )
+    return cellUpdated[0] > 0
+      ? res.json(await Cellphone.findAll())
+      : res.status(404).json("Celular no encontrado")
+  } catch (error) {
+    console.log("Error controller update cellphone", error);
+    return res.status(500).json(error)
+  }
+}
 
 module.exports = {
   getAllProducts,
@@ -196,4 +235,7 @@ module.exports = {
   createProduct,
   getListBrands,
   getListOs,
+  updateStock,
+  updateCell,
+  createBrand,
 };

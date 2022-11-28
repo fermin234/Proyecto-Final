@@ -1,6 +1,5 @@
 import axios from "axios";
-const URL = process.env.REACT_APP_URL || "http://localhost:3001" 
-
+const URL = process.env.REACT_APP_URL || "http://localhost:3001";
 
 export function getProducts() {
   return async (dispatch) => {
@@ -40,11 +39,14 @@ export const getListOs = () => {
   };
 };
 
-export const createCellPhone = (cell) => {
-  const data = cell;
+export const createCellPhone = (data) => {
   return async (dispatch) => {
     try {
-      const response = await axios.post(`${URL}/products/create`, data);
+      const response = await axios.post(`${URL}/products/create`, data, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      });
       return dispatch({
         type: "CREATE_PRODUCT",
         payload: response.data,
@@ -55,12 +57,43 @@ export const createCellPhone = (cell) => {
   };
 };
 
+export const editCellphone = (data) =>{
+  return async(dispatch) =>{
+    try {
+      const updateCell = await axios.patch(`${URL}/products/updateCell`, data);
+      return dispatch({
+        type: "EDIT_PRODUCT",
+        payload: updateCell.data
+      })
+    } catch (error) {
+      console.log("Error redux actions edit cellphone", error);
+      return error
+      
+    }
+  }
+}
+
+export const createBrand = (data) =>{
+  return async(dispatch) =>{
+    try {
+      const newBrand = await axios.post(`${URL}/products/new-brand`, data)
+      return dispatch({
+        type: "CREATE_BRAND",
+        payload: newBrand.data[0]
+      })
+    } catch (error) {
+      console.log("Error controller creando marca nueva ", error);
+      return error
+    }
+  }
+}
+
 export function resetFilter() {
   return { type: "RESET_FILTER" };
 }
 
-export function filterBrand(marca) {
-  if (marca !== "") return { type: "FILTER_BRAND", payload: marca };
+export function filterBrand(payload) {
+  return { type: "FILTER_BRAND", payload };
 }
 
 export function filterStorage(storage) {
@@ -122,7 +155,7 @@ export function login(dataUser) {
       const response = await axios.post(`${URL}/user/login`, dataUser);
       const token = JSON.stringify(response.data.token);
       localStorage.setItem("token", token);
-      console.log("Redux actions login user", response);      
+      console.log("Redux actions login user", response);
       return dispatch({
         type: "LOGIN",
         payload: response.data,
@@ -137,13 +170,13 @@ export function getProfile(id) {
   return async function (dispatch) {
     try {
       const profile = await axios.get(`${URL}/user/getProfile?id=${id}`);
-      console.log("Redux action get perfil", profile.data);
       const token = JSON.stringify(profile.data.token);
+      console.log("esto trae la acction: ", profile);
       localStorage.setItem("token", token);
       return dispatch({
         type: "GET_PERFIL",
-        payload: profile.data
-      })
+        payload: profile.data,
+      });
     } catch (error) {
       return error;
     }
@@ -166,19 +199,29 @@ export const udapteUser = (user) => {
   };
 };
 
-
-export const updateUser = (user) =>{
+export const updateUser = (user) => {
   return async (dispatch) => {
     try {
-      const updateUser = await axios.patch(`${URL}/user/update/${user.id}`, user);
+      const updateUser = await axios.patch(
+        `${URL}/user/update/${user.id}`,
+        user
+      );
       console.log("Respuesta action redux update user", updateUser);
       return dispatch({
         type: "UPDATE_USER",
-        payload: updateUser.data
-      })
+        payload: updateUser.data,
+      });
     } catch (error) {
-      console.log("Error action actualizar usuario", error);    
-      return error
+      console.log("Error action actualizar usuario", error);
+      return error;
     }
   };
-}
+};
+export const resetProducts = (products) => {
+  return async (dispatch) => {
+    return dispatch({
+      type: "RESET_PRODUCTS",
+      payload: products,
+    });
+  };
+};
