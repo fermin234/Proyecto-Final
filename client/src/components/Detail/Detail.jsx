@@ -168,7 +168,8 @@ export default function Detail() {
 
           <div class="mt-4">
             <ul role="list" class="list-disc spacey -4 pl-4 text-sm">
-              <li class="text-gray-400"><span class="text-gray-600">Marca: {phones.map(e => e.brand.name)}</span></li>
+            <li class="text-gray-400"><span class="text-gray-600">Marca: {phones.map(e => e.brand.name)}</span></li>
+            <li class="text-gray-400"><span class="text-gray-600">Modelo: {phones.map(e => e.name)}</span></li>
               <li class="text-gray-400"><span class="text-gray-600">RAM: {phones.map(e => e.ram)}</span></li>
               <li class="text-gray-400"><span class="text-gray-600">Camara Trasera: {phones.map(e => e.rear_camera)}</span></li>
               <li class="text-gray-400"><span class="text-gray-600">Camara Frontal: {phones.map(e => e.front_camera)}</span></li>

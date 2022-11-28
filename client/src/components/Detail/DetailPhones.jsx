@@ -40,6 +40,7 @@ export default function Detail() {
           <div><h2>Ficha Tecnica</h2></div>
           <div >
             <h4>Marca: {phones.map(e => e.brand.name)}</h4>
+            <h4>Modelo: {phones.map(e => e.name)}</h4>
             <h4>Camara Trasera: {phones.map(e => e.rear_camera)}</h4>
             <h4>Camara frontal: {phones.map(e => e.front_camera)}</h4>
             <h4>RAM: {phones.map(e => e.ram)}</h4>
