@@ -135,7 +135,7 @@ export default function Detail() {
                 <label class="-m-0.5 relative p-0.5 rounded-full flex items-center justify-center cursor-pointer focus:outline-none ring-blue-400">
                   <input type="radio" name="color-choice" value="Blue" class="sr-only" aria-labelledby="color-choice-1-label"/>
                   <span id="color-choice-1-label" class="sr-only"> Blue </span>
-                  <span aria-hidden="true" class="h-8 w-8 bg-gray-200 border border-black border-opacity-10 rounded-full"></span>
+                  <span aria-hidden="true" class="h-8 w-8 bg-blue-200 border border-black border-opacity-10 rounded-full"></span>
                 </label>
 
               
@@ -153,7 +153,7 @@ export default function Detail() {
           <button type="submit" class="mt-10 flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 py-3 px-8 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Comprar</button>
     
 
-      <div class="py-10 lg:col-span-2 lg:col-start-1 lg:border-r lg:border-gray-200 lg:pt-6 lg:pb-16 lg:pr-8">
+      <div class="py-10 lg:col-span-2 lg:col-start-10 lg:border-r lg:border-gray-200 lg:pt-6 lg:pb-16 lg:pr-8">
 
         <div>
           <h3 class="sr-only">Description</h3>
@@ -167,7 +167,7 @@ export default function Detail() {
           <h3 class="text-sm font-medium text-gray-900">Ficha Tecnica</h3>
 
           <div class="mt-4">
-            <ul role="list" class="list-disc space-y-2 pl-4 text-sm">
+            <ul role="list" class="list-disc spacey -4 pl-4 text-sm">
               <li class="text-gray-400"><span class="text-gray-600">Marca: {phones.map(e => e.brand.name)}</span></li>
               <li class="text-gray-400"><span class="text-gray-600">RAM: {phones.map(e => e.ram)}</span></li>
               <li class="text-gray-400"><span class="text-gray-600">Camara Trasera: {phones.map(e => e.rear_camera)}</span></li>
